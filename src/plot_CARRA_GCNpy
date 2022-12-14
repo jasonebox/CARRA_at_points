@@ -1,0 +1,169 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Nov 28 19:16:42 2022
+
+updated Nov 2022
+@author: Jason Box, GEUS, jeb@geus.dk
+"""
+# import time
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import os
+import glob
+from datetime import datetime, timedelta
+import calendar
+from numpy.polynomial.polynomial import polyfit
+from scipy import stats
+
+# global plot settings
+font_size=16
+th=1
+# plt.rcParams['font.sans-serif'] = ['Georgia']
+plt.rcParams['axes.facecolor'] = 'white'
+plt.rcParams['axes.edgecolor'] = 'black'
+plt.rcParams['axes.grid'] = True
+plt.rcParams['grid.alpha'] = 1
+co=0.9; plt.rcParams['grid.color'] = (co,co,co)
+plt.rcParams["font.size"] = font_size
+plt.rcParams['legend.fontsize'] = font_size*0.8
+plt.rcParams['mathtext.default'] = 'regular'
+
+
+iyear=1991 ; fyear=2021
+
+varname=['t2m'] ; app='PROMICE'
+varname=['t2m'] ; app='TAS'
+varname=['t2m'] ; app='t-10m'
+# varname=['rf'] ; app='PROMICE'
+varname=['t2m','tp'] ; app='points'
+# varname=['t2m'] ; app='Zackenberg'
+# varname=['rf'] ; app='Zackenberg'
+varname=['tp','rf','t2m'] ; app='Zackenberg'
+# varname=['tp','rf','t2m'] ; app='GNET'
+varname=['tp','rf','t2m'] ; app='GEUS_AWS'
+
+app='GC-Net'
+# varname=['tp','rf','t2m'] ; app='Zackenberg'
+
+if app=='PROMICE':
+    # read PROMICE locations
+    meta = pd.read_csv('./ancil/PROMICE_info_w_header_2017-2018_stats_w_Narsaq_etc.csv',delim_whitespace=True)
+    # meta = pd.read_csv('./ancil/PROMICE_TAS.csv',delim_whitespace=True)
+    # having a column named "name" create conflicts in DataFrame
+    meta.rename(columns={'name': 'station_name'}, inplace=True)
+
+if app=='t-10m':
+    # read PROMICE locations
+    meta = pd.read_csv('/Users/jason/Dropbox/BAV firn T study/coords.csv')
+    # meta = pd.read_csv('./ancil/PROMICE_TAS.csv',delim_whitespace=True)
+    # having a column named "name" create conflicts in DataFrame
+    meta.rename(columns={'site': 'station_name'}, inplace=True)
+
+if app=='Zackenberg':
+    # read PROMICE locations
+    meta = pd.read_csv('./ancil/'+app+'.csv')
+
+if app=='GEUS_AWS':
+    # read PROMICE locations
+    meta = pd.read_csv('/Users/jason/Dropbox/AWS/_merged/GEUS_AWS_sites_20221128.csv')   
+    meta.lon=-meta.lon
+    
+if app=='GC-Net':
+    # read PROMICE locations
+    meta = pd.read_csv('/Users/jason/Dropbox/AWS/GCNET/GCNet_positions/output/GC-Net_info_incl_1999.csv')   
+    meta.rename(columns={'name': 'station_name'}, inplace=True)
+
+if app=='GNET':
+    # read PROMICE locations
+    meta = pd.read_csv('/Users/jason/Dropbox/GNET/GNET_stations.csv')    
+# if app=='RCM_validation':
+#     meta = pd.read_csv('./ancil/Greenland_sites_for_eccum_rain_evaluation_w_PROMICE_etc.csv')
+#     meta.rename(columns={'Name': 'station_name'}, inplace=True)
+
+# meta.replace('#REF!', np.nan, inplace=True)
+
+if app=='points':
+    meta = pd.read_csv('./ancil/Greenland_sites_for_accum_rain_evaluation_w_PROMICE_etc_vfyear0929.csv')
+    meta.rename(columns={'Name': 'station_name'}, inplace=True)
+
+N=len(meta.station_name)
+
+varname=['tp','rf','t2m']
+varname2=['total precipitation','rainfall','2m air temperature']
+
+varname=['t2m']
+varname2=['2m air temperature']
+units=['°C']
+
+season='JJA'
+season='ANN'
+
+# def plot_it(x,y,c)
+for vv,varnam in enumerate(varname):
+    for ss,site in enumerate(meta.station_name):
+        # if site=='SUM':
+        if site=='SWC':
+        # if site=='SDM':
+        # if site=='QAS_L':
+        # if site=='NAU':
+        # if site=='Zackenberg':
+        # if site!='null':
+            print(varnam,site,N-ss,meta.lat[ss],meta.lon[ss])#,meta.elev[ss])
+            fn='/Users/jason/Dropbox/CARRA/CARRA_at_points/monthly/'+app+'_'+varnam+'_'+site+'_'+str(iyear)+'-'+str(fyear)+'_mean.csv'
+            df=pd.read_csv(fn)
+            n_years=len(df)
+            
+            # AWS=pd.read_csv('/Users/jason/Dropbox/AWS/GCNET/GCN_climate_stats/output/Swiss Camp_monthly_air_t_2d.csv')
+            # AWS['ANN']=np.nan
+            # for i in range(len(AWS)):
+            #     v=np.where(np.isnan(AWS.iloc[i,1:]))
+            #     if len(v[0])==1:
+            #             AWS['ANN'][i]=np.mean(AWS.iloc[i,1:13])
+            #             # print(i,AWS.year[i],AWS['ANN'][i])
+            #            # print(AWS.iloc[i,1:13])
+
+            # AWS=pd.read_csv('/Users/jason/Dropbox/AWS/T_records_Greenland_ice/monthly_air_T/Summit_T_monthly_seasonal_annual.csv')
+            AWS=pd.read_csv('/Users/jason/Dropbox/AWS/T_records_Greenland_ice/monthly_air_T/SWC_T_monthly_seasonal_annual.csv')
+            
+            plt.close()
+            x=df.year ;y=df[season]
+            plt.plot(x,y,c='b')
+            b, m = polyfit(x, y, 1)
+            coefs=stats.pearsonr(x,y)
+            xx=[np.min(x),np.max(x)]
+            yyy=[(b + m * xx[0]),(b + m * xx[1])]
+            plt.plot(xx,yyy, '-',c='b',label=" CARRA trend: %.1f" % (m*n_years)+' '+units[vv]+"\n(1-p):%.3f" % (1-coefs[1]))
+
+            x=AWS.year ;y=AWS[season]
+            plt.plot(x,y,c='r')
+            v=np.where(~np.isnan(y))
+            b, m = polyfit(x[v[0]], y[v[0]], 1)
+            coefs=stats.pearsonr(x[v[0]],y[v[0]])
+            xx=[np.min(x[v[0]]),np.max(x[v[0]])]
+            yyy=[(b + m * xx[0]),(b + m * xx[1])]
+            plt.plot(xx,yyy, '-',c='r',label="in-situ trend: %.1f" % (m*n_years)+' '+units[vv]+"\n(1-p):%.3f" % (1-coefs[1]))
+            
+            plt.title(site+' CARRA annual '+varname2[vv])
+            plt.legend()
+            plt.ylabel(units[vv])
+            plt.xlabel('year')
+            
+            ly='x'
+            
+            if ly == 'x':
+                plt.show()
+            
+            
+            if ly =='p':
+                figpath='/Users/jason/Dropbox/CARRA/CARRA_at_points/Figs/'
+                # os.system('mkdir -p '+figpath)
+                # figpath='./Figs/annual/'+varnams[i]+'/'+str(DPI)+'/'
+                # os.system('mkdir -p '+figpath)
+                figname=figpath+app+'_'+varnam+'_'+site+'_'+str(iyear)+'-'+str(fyear)+'_'+season
+                # if i<2:
+                plt.savefig(figname+'.pdf', bbox_inches='tight')
+
+    
+
