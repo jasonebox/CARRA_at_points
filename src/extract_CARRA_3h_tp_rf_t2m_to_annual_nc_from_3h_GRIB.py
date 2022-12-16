@@ -156,7 +156,7 @@ def write_nc(varnam,varxx,n_days,ni,nj,outpath):
     ncfile.close(); print('Dataset is closed!')
     return
 
-fn='/Users/jason/Dropbox/CARRA/CARRA_at_points/site_coords/TIN_Greenland_ccordinates_for_CARRA.csv'
+fn='./site_coords/TIN_Greenland_ccordinates_for_CARRA.csv'
 df=pd.read_csv(fn)
 n=len(df)
 
@@ -245,13 +245,13 @@ for yy,year in enumerate(years):
                     # plt.show()
                     
         print('saving '+year)
-        with open('/Users/jason/0_dat/CARRA_at_TIN_points/3h/'+year+'.npy', 'wb') as f:
+        with open('./3h/'+year+'.npy', 'wb') as f:
             np.save(f, rf_3h_5dcube)
             np.save(f, tp_3h_5dcube)
             np.save(f, t2m_3h_5dcube)
         
 #%% check
-        # with open('/Users/jason/0_dat/CARRA_at_TIN_points/3h/'+year+'.npy', 'rb') as f:
+        # with open('./3h/'+year+'.npy', 'rb') as f:
         #     rf_3h_5dcube=np.load(f)
         #     tp_3h_5dcube=np.load(f)
         #     t2m_3h_5dcube=np.load(f)
