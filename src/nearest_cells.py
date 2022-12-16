@@ -122,14 +122,16 @@ for k in range(0,n):
     x[df['j'][k]-size:df['j'][k]+size,df['i'][k]-size:df['i'][k]+size]=3000
 plt.imshow(x)
 
+#%%
 fn='/Users/jason/Dropbox/CARRA/CARRA_at_points/site_coords/TIN_Greenland_ccordinates_for_CARRA.csv'
 df=pd.read_csv(fn)
 n=len(df)
 
-with open('/Users/jason/0_dat/CARRA_at_TIN_points/lat_lon_elev.npy', 'wb') as f:
-    np.save(f, lat[df['j'][k]-size:df['j'][k]+size+1,df['i'][k]-size:df['i'][k]+size+1])
-    np.save(f, lon[df['j'][k]-size:df['j'][k]+size+1,df['i'][k]-size:df['i'][k]+size+1])
-    np.save(f, elev[df['j'][k]-size:df['j'][k]+size+1,df['i'][k]-size:df['i'][k]+size+1])
+for k in range(0,n):
+    with open('/Users/jason/0_dat/CARRA_at_TIN_points/lat_lon_elev_'+df.name[k]+'.npy', 'wb') as f:
+        np.save(f, lat[df['j'][k]-size:df['j'][k]+size+1,df['i'][k]-size:df['i'][k]+size+1])
+        np.save(f, lon[df['j'][k]-size:df['j'][k]+size+1,df['i'][k]-size:df['i'][k]+size+1])
+        np.save(f, elev[df['j'][k]-size:df['j'][k]+size+1,df['i'][k]-size:df['i'][k]+size+1])
 
 #%% test
 with open('/Users/jason/0_dat/CARRA_at_TIN_points/lat_lon_elev.npy', 'rb') as f:
